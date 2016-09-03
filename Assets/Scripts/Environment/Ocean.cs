@@ -8,6 +8,8 @@ public class Ocean : MonoBehaviour {
 
     public float tile_size;
 
+    public Material ocean_material;
+
 	// Use this for initialization
 	void Start () {
 	
