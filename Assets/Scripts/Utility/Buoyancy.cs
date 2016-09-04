@@ -18,7 +18,7 @@ public class Buoyancy : MonoBehaviour
 	public bool isConcave = false;
 	public int voxelsLimit = 16;
 	
-	private const float DAMPFER = 0.3f;
+	private const float DAMPFER = 0.9f;
 	private const float WATER_DENSITY = 800;
 	
 	private float voxelHalfHeight;
@@ -235,14 +235,16 @@ public class Buoyancy : MonoBehaviour
 	
 	/// <summary>
 	/// Returns the water level at given location.
+    /// This method should be the same as the OceanShader's wave function.
 	/// </summary>
 	/// <param name="x">x-coordinate</param>
 	/// <param name="z">z-coordinate</param>
 	/// <returns>Water level</returns>
 	private float GetWaterLevel(float x, float z)
 	{
-		//		return ocean == null ? 0.0f : ocean.GetWaterHeightAtLocation(x, z);
-		return 0.0f;
+        //		return ocean == null ? 0.0f : ocean.GetWaterHeightAtLocation(x, z);
+        float phase = Time.time;
+        return -Mathf.Sin(phase) * 0.1f;
 	}
 	
 	/// <summary>
@@ -270,7 +272,11 @@ public class Buoyancy : MonoBehaviour
 				}
 				
 				var velocity = GetComponent<Rigidbody>().GetPointVelocity(wp);
-				var localDampingForce = -velocity * DAMPFER * GetComponent<Rigidbody>().mass;
+         
+                var tempDamp = DAMPFER;
+              
+
+				var localDampingForce = -velocity * tempDamp * GetComponent<Rigidbody>().mass;
 				var force = localDampingForce + Mathf.Sqrt(k) * localArchimedesForce;
 
                 if (transform.GetComponent<Rigidbody>().velocity.y > 0 && transform.position.y < 0)

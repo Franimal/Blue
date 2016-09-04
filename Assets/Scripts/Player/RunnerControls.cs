@@ -140,8 +140,8 @@ public class RunnerControls : MonoBehaviour {
         if (player.transform.position.y > -0.4) {
 			player.GetComponent<Rigidbody>().velocity = Vector3.zero;
 			player.GetComponent<Rigidbody>().AddForce (new Vector3 (0, diveForce, 0));
-			player.GetComponent<Animation>() ["dive"].speed = 1.7f;
-			player.GetComponent<Animation>().CrossFade ("dive", 0.25f);
+			//player.GetComponent<Animation>() ["dive"].speed = 1.7f;
+			//player.GetComponent<Animation>().CrossFade ("dive", 0.25f);
 		}
 	}
 
