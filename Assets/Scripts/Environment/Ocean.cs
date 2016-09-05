@@ -19,10 +19,13 @@ public class Ocean : MonoBehaviour {
     private float rotate;
 
     private MeshRenderer renderer;
+    private bool initGameEnd;
+    private float stoppingObstacleSpeed;
 
     void Awake() {
         GenerateGrid(grid_size_x, grid_size_z, tile_size);
         renderer = GetComponent<MeshRenderer>();
+        renderer.material.renderQueue = 3001;
     }
 
 	// Use this for initialization
@@ -32,8 +35,21 @@ public class Ocean : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-        offset += (Time.deltaTime * scroll_speed) / 10.0f;
+        offset += (Time.deltaTime * Time.timeScale * scroll_speed) / 25.0f;
         renderer.material.SetTextureOffset("_MainTex", new Vector2(offset, 0));
+
+        if (GameController.getGameState() == GameController.State.GAMEOVER) {
+
+            if (!initGameEnd) {
+                initGameEnd = true;
+                stoppingObstacleSpeed = scroll_speed;
+            }
+            else {
+                stoppingObstacleSpeed *= (0.99f);
+            }
+
+            scroll_speed = stoppingObstacleSpeed;
+        }
     }
 
     private void GenerateGrid(int xSize, int zSize, float tileSize) {

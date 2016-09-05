@@ -15,12 +15,13 @@ Shader "Mobile/Ocean Shader" {
 	_BumpMap("Normalmap", 2D) = "bump" {}
 	}
 		SubShader{
-		Tags{ "RenderType" = "Transparent" }
+		Tags{"RenderQueue"="Transparent" "RenderType"="Transparent"}
 		LOD 250
+		ZWrite On
 
 		CGPROGRAM
-#pragma surface surf MobileBlinnPhong alpha vertex:vert exclude_path:prepass nolightmap noforwardadd halfasview interpolateview
-
+		#pragma surface surf MobileBlinnPhong alpha vertex:vert exclude_path:prepass nolightmap noforwardadd halfasview interpolateview nofog
+		
 		inline fixed4 LightingMobileBlinnPhong(SurfaceOutput s, fixed3 lightDir, fixed3 halfDir, fixed atten)
 	{
 		fixed diff = max(0, dot(s.Normal, lightDir));
@@ -42,18 +43,21 @@ Shader "Mobile/Ocean Shader" {
 	struct Input {
 		float2 uv_MainTex;
 	};
-
+	
 	void vert(inout appdata_full v) {
 		
 		//Apply horizon effect
+		v.vertex.y -= 0.002 * (v.vertex.x + 70) * (v.vertex.x + 70);
 		if (v.vertex.x > 0) {
-			v.vertex.y -= 0.001 * v.vertex.x * v.vertex.x;
+			//v.vertex.y -= 0.004 * v.vertex.x * v.vertex.x;
 		}
-		v.vertex.y -= 0.001 * v.vertex.z * v.vertex.z;
+		v.vertex.y -= 0.0001 * v.vertex.z * v.vertex.z;
 
 		//Apply waves
-		float phase = _Time.y + v.vertex.x * 40.0;
-		v.vertex.y += sin(phase) * 0.5;
+		float swell = _Time.y + v.vertex.x * 40.0;
+		float chop = _Time.y * 0.8 + v.vertex.z * v.vertex.x * 20.0;
+		v.vertex.y += sin(swell) * 0.5;
+		v.vertex.y += sin(chop) * 0.1;
 	}
 
 	void surf(Input IN, inout SurfaceOutput o) {

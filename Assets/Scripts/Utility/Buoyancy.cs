@@ -242,9 +242,9 @@ public class Buoyancy : MonoBehaviour
 	/// <returns>Water level</returns>
 	private float GetWaterLevel(float x, float z)
 	{
-        //		return ocean == null ? 0.0f : ocean.GetWaterHeightAtLocation(x, z);
+        //v.vertex.y -= 0.004 * v.vertex.x * v.vertex.x;
         float phase = Time.time;
-        return -Mathf.Sin(phase) * 0.1f;
+        return Mathf.Sin(phase) * 0.1f;
 	}
 	
 	/// <summary>

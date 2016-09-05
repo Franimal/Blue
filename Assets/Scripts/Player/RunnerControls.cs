@@ -30,6 +30,12 @@ public class RunnerControls : MonoBehaviour {
 	private float startTime;
 	private float speedMult = 1.0f;
 
+    private bool touchDown = false;
+    private int touchDownIndex = -1;
+    private Vector2 lastTouchPos;
+
+    public float initialTimeScale;
+
 	enum Lane {
 		LEFT, CENTER, RIGHT
 	}
@@ -46,12 +52,17 @@ public class RunnerControls : MonoBehaviour {
 
 	void StartGame(){
 		startTime = Time.realtimeSinceStartup;
-		Time.timeScale = 1.7f;
+		Time.timeScale = initialTimeScale;
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		Time.timeScale += 0.0001f * Time.deltaTime;
+
+        if (touchDown) {
+            lastTouchPos = Input.GetTouch(touchDownIndex).position;
+        }
+
+        Time.timeScale += 0.0001f * Time.deltaTime;
 
         switch (currentLane) {
 
@@ -128,7 +139,7 @@ public class RunnerControls : MonoBehaviour {
 	private void swipeUp(){
 		if (player.transform.position.y < 0.2) {
 			player.GetComponent<Animation>().Stop ();
-			player.GetComponent<Animation>() ["jump"].speed = 1.1f;
+			player.GetComponent<Animation>() ["jump"].speed = 1f;
 			player.GetComponent<Animation>().Play ("jump", PlayMode.StopAll);
 			player.GetComponent<Rigidbody>().velocity = Vector3.zero;
 			player.GetComponent<Rigidbody>().AddForce (new Vector3 (0, jumpForce, 0));
@@ -147,47 +158,53 @@ public class RunnerControls : MonoBehaviour {
 
 	public void SwipeTouch()
 	{
-		if(Input.touches.Length > 0)
-		{
+		if(!touchDown && Input.touches.Length > 0) {
 			Touch t = Input.GetTouch(0);
-			if(t.phase == TouchPhase.Began)
-			{
-				//save began touch 2d point
-				firstPressPos = new Vector2(t.position.x,t.position.y);
-			}
-			if(t.phase == TouchPhase.Ended)
-			{
-				//save ended touch 2d point
-				secondPressPos = new Vector2(t.position.x,t.position.y);
-				
-				//create vector from the two points
-				currentSwipe = new Vector3(secondPressPos.x - firstPressPos.x, secondPressPos.y - firstPressPos.y);
-				
-				//normalize the 2d vector
-				currentSwipe.Normalize();
-				
-				//swipe upwards
-				if(currentSwipe.y > 0 && currentSwipe.x > -0.5f && currentSwipe.x < 0.5f)
-				{
-					swipeUp ();
-				}
-				//swipe down
-				if(currentSwipe.y < 0 && currentSwipe.x > -0.5f && currentSwipe.x < 0.5f)
-				{
-					swipeDown ();
-				}
-				//swipe left
-				if(currentSwipe.x < 0 && currentSwipe.y > -0.5f && currentSwipe.y < 0.5f)
-				{
-					swipeLeft();
-				}
-				//swipe right
-				if(currentSwipe.x > 0 && currentSwipe.y > -0.5f && currentSwipe.y < 0.5f)
-				{
-					swipeRight ();
-				}
-			}
+
+			//save began touch 2d point
+			firstPressPos = new Vector2(t.position.x,t.position.y);
+             touchDown = true;
 		}
+
+        if (touchDown) {
+            bool contains = false;
+            foreach(var touch in Input.touches) {
+                if(touch.fingerId == touchDownIndex) {
+                    contains = true;
+                }
+            }
+            if (!contains) {
+                var position = lastTouchPos;
+                 //save ended touch 2d point
+                 secondPressPos = new Vector2(position.x, position.y);
+
+                //create vector from the two points
+                currentSwipe = new Vector3(secondPressPos.x - firstPressPos.x, secondPressPos.y - firstPressPos.y);
+
+                //normalize the 2d vector
+                currentSwipe.Normalize();
+
+                //swipe upwards
+                if (currentSwipe.y > 0 && currentSwipe.x > -0.5f && currentSwipe.x < 0.5f) {
+                    swipeUp();
+                }
+                //swipe down
+                if (currentSwipe.y < 0 && currentSwipe.x > -0.5f && currentSwipe.x < 0.5f) {
+                    swipeDown();
+                }
+                //swipe left
+                if (currentSwipe.x < 0 && currentSwipe.y > -0.5f && currentSwipe.y < 0.5f) {
+                    swipeLeft();
+                }
+                //swipe right
+                if (currentSwipe.x > 0 && currentSwipe.y > -0.5f && currentSwipe.y < 0.5f) {
+                    swipeRight();
+                }
+
+                touchDown = false;
+            } 
+        }
+
 	}
 
 		public void SwipeMouse()
