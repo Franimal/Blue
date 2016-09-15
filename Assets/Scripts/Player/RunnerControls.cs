@@ -34,8 +34,6 @@ public class RunnerControls : MonoBehaviour {
     private int touchDownIndex = -1;
     private Vector2 lastTouchPos;
 
-    public float initialTimeScale;
-
 	enum Lane {
 		LEFT, CENTER, RIGHT
 	}
@@ -51,8 +49,7 @@ public class RunnerControls : MonoBehaviour {
 	}
 
 	void StartGame(){
-		startTime = Time.realtimeSinceStartup;
-		Time.timeScale = initialTimeScale;
+        startTime = Time.realtimeSinceStartup;
 	}
 	
 	// Update is called once per frame
@@ -61,8 +58,6 @@ public class RunnerControls : MonoBehaviour {
         if (touchDown) {
             lastTouchPos = Input.GetTouch(touchDownIndex).position;
         }
-
-        Time.timeScale += 0.0001f * Time.deltaTime;
 
         switch (currentLane) {
 
@@ -255,9 +250,17 @@ public class RunnerControls : MonoBehaviour {
         {
             if (settings.isDangerous())
             {
+
+                //   Vector3 impulse = col.impulse;
+
+                //   if (impulse.x > 10) {
+                GameController.setObstacleSpeed(0);
                 GetComponent<Rigidbody>().freezeRotation = false;
                 GameController.setGameOver();
-            }
+              //  } else {
+                //    GameController.setObstacleSpeed(GameController.startObstacleMoveSpeed/2f);   
+                //}
+             }
         }
     }
 

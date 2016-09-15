@@ -66,17 +66,17 @@ public class ObstacleGenerator : MonoBehaviour {
             speed = stoppingObstacleSpeed;
         }
 
-
         Vector3 moveVec = new Vector3 (speed*Time.deltaTime, 0, 0);
 
 		for (int i = 0; i < obstacles.Count; i++) {
 			GameObject ob = obstacles[i];
 			ob.transform.Translate (moveVec);
 
-            if((ob.transform.position.x - deletePosition.x) < 0)
+            if((ob.transform.position.x - deletePosition.x) < -20)
             {
                 obstacles.Remove(ob);
                 obstaclePool.Add(ob);
+                ob.GetComponent<Collider>().enabled = false;
                 break;
             }
 		}
@@ -91,7 +91,8 @@ public class ObstacleGenerator : MonoBehaviour {
 	void addObstacle(){
 		GameObject ob = getRandomObstacle ();
 		obstacles.Add (ob);
-	}
+        ob.GetComponent<Collider>().enabled = true;
+    }
 
 	//Gets a random obstacle from our set of prefabs.  Will either get one from the pool,
 	//or create one if there aren't any available.
@@ -108,7 +109,7 @@ public class ObstacleGenerator : MonoBehaviour {
 		//Check whether our pool contains one of these obstacles already
 		for(int i = 0; i < obstaclePool.Count; i++){
 			//If this obstacles name matches the prefab, save it and break.
-			if(obstaclePool[i].GetComponent<ObstacleSettings>().getName().Equals (prefabName)){
+			if(obstaclePool[i].GetComponentInChildren<ObstacleSettings>().getName().Equals (prefabName)){
 				pooledObstacle = obstaclePool[i];
 				break;
 			}

@@ -9,13 +9,14 @@ public class ObstacleSettings : MonoBehaviour {
     private MeshRenderer render;
 
     private float alpha = 1;
-	// Use this for initialization
+    // Use this for initialization
+
 	void Start () {
 	
 	}
 
     void Awake() {
-        render = GetComponent<MeshRenderer>();
+        render = GetComponentInChildren<MeshRenderer>();
         alpha = render.material.color.a;
     }
 	

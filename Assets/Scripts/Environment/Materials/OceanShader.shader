@@ -11,8 +11,11 @@ Shader "Mobile/Ocean Shader" {
 	Properties{
 		_Shininess("Shininess", Range(0.03, 1)) = 0.078125
 		_Alpha("Alpha", Range(0, 1)) = 0.7
+		_ReflectionAlpha("ReflectionAlpha", Range(0, 1)) = 1
 		_MainTex("Base (RGB) Gloss (A)", 2D) = "white" {}
-	_BumpMap("Normalmap", 2D) = "bump" {}
+		_WavesOn("WavesOn", Float) = 0.0
+		_BumpMap("Normalmap", 2D) = "bump" {}
+		_ReflectionTex("ReflectionTex", 2D) = "white" { TexGen ObjectLinear }
 	}
 		SubShader{
 		Tags{"RenderQueue"="Transparent" "RenderType"="Transparent"}
@@ -39,9 +42,13 @@ Shader "Mobile/Ocean Shader" {
 	sampler2D _BumpMap;
 	half _Shininess;
 	half _Alpha;
+	half _WavesOn;
+	float _ReflectionAlpha;
+	sampler2D _ReflectionTex;
 
 	struct Input {
 		float2 uv_MainTex;
+		float4 screenPos;
 	};
 	
 	void vert(inout appdata_full v) {
@@ -56,8 +63,14 @@ Shader "Mobile/Ocean Shader" {
 		//Apply waves
 		float swell = _Time.y + v.vertex.x * 40.0;
 		float chop = _Time.y * 0.8 + v.vertex.z * v.vertex.x * 20.0;
+
+		if (_WavesOn < 1.0) {
+			swell = swell * 0.01;
+		}
+
 		v.vertex.y += sin(swell) * 0.5;
 		v.vertex.y += sin(chop) * 0.1;
+
 	}
 
 	void surf(Input IN, inout SurfaceOutput o) {
@@ -67,6 +80,9 @@ Shader "Mobile/Ocean Shader" {
 		o.Alpha = _Alpha;
 		o.Specular = _Shininess;
 		o.Normal = UnpackNormal(tex2D(_BumpMap, IN.uv_MainTex));
+
+		o.Albedo = tex2D(_MainTex, IN.uv_MainTex).rgb * _Alpha;
+		o.Emission = tex2D(_ReflectionTex, IN.screenPos.xy / IN.screenPos.w).rgb * _ReflectionAlpha;
 	}
 	ENDCG
 	}
