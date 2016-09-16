@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.SceneManagement;
 using System;
 
 public class GameController : MonoBehaviour {
@@ -93,6 +94,10 @@ public class GameController : MonoBehaviour {
 	public enum State {
 		MAIN_MENU, PAUSED, CHARACTER_SELECTION, PLAYING, GAMEOVER
 	}
+
+    public void goToMainMenu() {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
 
     public static void setGameOver()
     {

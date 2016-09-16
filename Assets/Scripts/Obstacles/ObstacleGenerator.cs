@@ -10,6 +10,8 @@ public class ObstacleGenerator : MonoBehaviour {
 	//obstacle at. (y-height, z-position)
 	public GameObject[] obstaclePrefabs;
 
+    public GameObject currencyPrefab;
+
 	public float minObstacleGap = 10f;
 	public float maxObstacleGap = 30f;
 
@@ -35,9 +37,12 @@ public class ObstacleGenerator : MonoBehaviour {
 
     private Vector3 spawnPosition = new Vector3(0, 0, 0);
 
+    private GameObject gameParent;
+
 	// Use this for initialization
 	void Start () {
-		obstacles = new List<GameObject> ();
+        gameParent = GameObject.FindGameObjectWithTag("GameParent");
+        obstacles = new List<GameObject> ();
 		obstaclePool = new List<GameObject> ();
 
 		//Now, create [obstacleAmount] of obstacles, and add them to the obstacles list.
@@ -70,18 +75,20 @@ public class ObstacleGenerator : MonoBehaviour {
 
 		for (int i = 0; i < obstacles.Count; i++) {
 			GameObject ob = obstacles[i];
-			ob.transform.Translate (moveVec);
-
-            if((ob.transform.position.x - deletePosition.x) < -20)
+			ob.transform.position += moveVec;
+    
+            if(ob.transform.position.x < -100)
             {
                 obstacles.Remove(ob);
                 obstaclePool.Add(ob);
-                ob.GetComponent<Collider>().enabled = false;
-                break;
+                Collider[] colliders = ob.GetComponentsInChildren<Collider>();
+                foreach(Collider c in colliders) {
+                    c.enabled = false;
+                }
             }
 		}
-
-        if(obstacles.Count < obstacleAmount)
+   
+        if(obstacles[obstacles.Count-1].transform.position.x < 100)
         {
             addObstacle();
         }
@@ -90,48 +97,66 @@ public class ObstacleGenerator : MonoBehaviour {
 
 	void addObstacle(){
 		GameObject ob = getRandomObstacle ();
+        ob.transform.parent = gameParent.transform;
+        GenerateCoins(ob);
 		obstacles.Add (ob);
-        ob.GetComponent<Collider>().enabled = true;
+        Collider[] colliders = ob.GetComponentsInChildren<Collider>();
+        foreach (Collider c in colliders) {
+            c.enabled = true;
+        }
+    }
+
+    void GenerateCoins(GameObject obstacle) {
+
+        Vector3[] coinPositions = obstacle.GetComponent<ObstacleSettings>().GetCoinPositions();
+
+        foreach(Vector3 pos in coinPositions) {
+            GameObject coin = newObject(currencyPrefab);
+            coin.transform.parent = gameParent.transform;
+            coin.transform.position = new Vector3(obstacle.transform.position.x + pos.x, obstacle.transform.position.y + pos.y, obstacle.transform.position.z + pos.z);
+            coin.GetComponent<ObstacleSettings>().setStartY(coin.transform.position.y);
+            obstacles.Add(coin);
+        }
+      
+    }
+
+    GameObject getFromPool(string prefabName) {
+        for (int i = 0; i < obstaclePool.Count; i++) {
+            if (obstaclePool[i].GetComponentInChildren<ObstacleSettings>().getName().Equals(prefabName)) {
+                return obstaclePool[i];
+            }
+        }
+        return null;
+    }
+
+    GameObject newObject(GameObject prefab) {
+
+        GameObject pooledObstacle = getFromPool(prefab.name);
+
+		if (pooledObstacle != null) {
+			obstaclePool.Remove (pooledObstacle);
+            pooledObstacle.transform.position = Vector3.zero;
+            return pooledObstacle;
+		}
+   
+        return (GameObject)Instantiate(prefab, Vector3.zero, prefab.transform.rotation);
     }
 
 	//Gets a random obstacle from our set of prefabs.  Will either get one from the pool,
 	//or create one if there aren't any available.
 	GameObject getRandomObstacle(){
 
-		GameObject obstacleToReturn = null;
+		
 
 		//Get a random prefab from the array of prefabs "obstaclePrefabs"
 		GameObject prefabToUse = obstaclePrefabs[Random.Range (0, obstaclePrefabs.Length)];
 
-		//Get the name of the prefab we want to use, for checking whether it's in the pool.
-		string prefabName = prefabToUse.name;
-		GameObject pooledObstacle = null;
-		//Check whether our pool contains one of these obstacles already
-		for(int i = 0; i < obstaclePool.Count; i++){
-			//If this obstacles name matches the prefab, save it and break.
-			if(obstaclePool[i].GetComponentInChildren<ObstacleSettings>().getName().Equals (prefabName)){
-				pooledObstacle = obstaclePool[i];
-				break;
-			}
-
-		}
-
-		//If we found a matching object, remove it from the pool and keep it saved.
-		if (pooledObstacle != null) {
-			obstacleToReturn = pooledObstacle;
-			obstaclePool.Remove (pooledObstacle);
-		}
-		//If there was an obj available in the pool, it should now be contained in "obstacleToReturn", 
-		//And should no longer be in the pool as we've removed it.
-
-		//If the pool did not contain the object, we now need to Instantiate a new clone
-		//of the prefab we've decided to use.
-		if (obstacleToReturn == null) {
-			obstacleToReturn = (GameObject) Instantiate(prefabToUse, Vector3.zero, prefabToUse.transform.rotation);
-            ObstacleSettings settings = obstacleToReturn.GetComponent<ObstacleSettings>();
-            settings.setName(prefabName);
-            settings.setDangerous(true);
-		}
+        GameObject obstacleToReturn = newObject(prefabToUse);
+        
+        ObstacleSettings settings = obstacleToReturn.GetComponent<ObstacleSettings>();
+        settings.setName(prefabToUse.name);
+        settings.setDangerous(true);
+		
 
         //We now have a GameObject stored in "obstacleToReturn".  We should now set it's position accordingly.
 
@@ -141,14 +166,19 @@ public class ObstacleGenerator : MonoBehaviour {
         float add = 0;
         if(obstacles.Count > 0)
         {
-            GameObject lastObstacle = obstacles[obstacles.Count-1];
+            GameObject lastObstacle = obstacles[obstacles.Count - 1];
+
             add = lastObstacle.GetComponent<Collider>().bounds.size.x / 2f;
             lastPosX = lastObstacle.transform.position.x;
         } 
 
 		float createXPosition = lastPosX + Random.Range(minObstacleGap, maxObstacleGap);
-		//prefabToUse.GetComponent<ObstacleSettings>.CreateY <-- choose Y with something like this?
-		Vector3 translation = new Vector3 (createXPosition, 0, randomLaneZ());
+        //prefabToUse.GetComponent<ObstacleSettings>.CreateY <-- choose Y with something like this?
+        float z = randomLaneZ();
+        if (obstacleToReturn.GetComponent<ObstacleSettings>().three_lanes_wide) {
+            z = RunnerControls.centerZ;
+        }
+        Vector3 translation = new Vector3 (createXPosition, 0, z);
         obstacleToReturn.transform.position = translation;
 
 		return obstacleToReturn;
