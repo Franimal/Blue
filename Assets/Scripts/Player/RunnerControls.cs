@@ -59,10 +59,6 @@ public class RunnerControls : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 
-        if (touchDown) {
-            lastTouchPos = Input.GetTouch(touchDownIndex).position;
-        }
-
         switch (currentLane) {
 
             case Lane.CENTER: currentLaneZ = centerZ; break;
@@ -70,11 +66,17 @@ public class RunnerControls : MonoBehaviour {
             case Lane.RIGHT: currentLaneZ = rightZ;  break;
 
         }
+        if (Application.isMobilePlatform) {
+            SwipeTouch();
+        } else {
+            SwipeMouse();
+        }   
 
-		SwipeTouch ();
-        SwipeMouse();
+        if (touchDown) {
+            lastTouchPos = Input.GetTouch(touchDownIndex).position;
+        }
 
-		updateTweens ();
+        updateTweens ();
 
 	}
 	
@@ -165,7 +167,9 @@ public class RunnerControls : MonoBehaviour {
 			//save began touch 2d point
 			firstPressPos = new Vector2(t.position.x,t.position.y);
              touchDown = true;
-		}
+            touchDownIndex = t.fingerId;
+
+        }
 
         if (touchDown) {
             bool contains = false;
